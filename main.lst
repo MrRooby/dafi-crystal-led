@@ -93,12 +93,12 @@
                                      93 ;	-----------------------------------------
       000000                         94 _delay:
       000000 52 02            [ 2]   95 	sub	sp, #2
-                                     96 ;	main.c: 12: for(i=0; i<50; i++){;} // crude delay
+                                     96 ;	main.c: 12: for(i=0; i<50000; i++){;} // crude delay
       000002 5F               [ 1]   97 	clrw	x
       000003 1F 01            [ 2]   98 	ldw	(0x01, sp), x
       000005                         99 00103$:
       000005 1E 01            [ 2]  100 	ldw	x, (0x01, sp)
-      000007 A3 00 32         [ 2]  101 	cpw	x, #0x0032
+      000007 A3 C3 50         [ 2]  101 	cpw	x, #0xc350
       00000A 24 07            [ 1]  102 	jrnc	00105$
       00000C 1E 01            [ 2]  103 	ldw	x, (0x01, sp)
       00000E 5C               [ 1]  104 	incw	x
@@ -137,18 +137,26 @@
       00003E                        137 00102$:
                                     138 ;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
       00003E 72 10 50 00      [ 1]  139 	bset	0x5000, #0
-                                    140 ;	main.c: 39: GPIOB_ODR |= (1 << LED_B); // selecting diode
-      000042 72 10 50 05      [ 1]  141 	bset	0x5005, #0
-                                    142 ;	main.c: 40: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
-      000046 72 11 50 0F      [ 1]  143 	bres	0x500f, #0
-                                    144 ;	main.c: 41: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+                                    140 ;	main.c: 39: GPIOD_ODR |= (1 << LED_B); // selecting diode
+      000042 72 10 50 0F      [ 1]  141 	bset	0x500f, #0
+                                    142 ;	main.c: 40: GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+      000046 72 11 50 05      [ 1]  143 	bres	0x5005, #0
+                                    144 ;	main.c: 42: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
       00004A 72 13 50 05      [ 1]  145 	bres	0x5005, #1
-                                    146 ;	main.c: 43: GPIOB_ODR |= (1 << LED_DIODE); 
+                                    146 ;	main.c: 44: GPIOB_ODR |= (1 << LED_DIODE); 
       00004E 72 12 50 05      [ 1]  147 	bset	0x5005, #1
-      000052 20 EA            [ 2]  148 	jra	00102$
-                                    149 ;	main.c: 45: }
-      000054 81               [ 4]  150 	ret
-                                    151 	.area CODE
-                                    152 	.area CONST
-                                    153 	.area INITIALIZER
-                                    154 	.area CABS (ABS)
+                                    148 ;	main.c: 45: delay();
+      000052 CDr00r00         [ 4]  149 	call	_delay
+                                    150 ;	main.c: 46: GPIOB_ODR |= (1 << LED_B); // selecting diode
+      000055 72 10 50 05      [ 1]  151 	bset	0x5005, #0
+                                    152 ;	main.c: 47: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+      000059 72 11 50 0F      [ 1]  153 	bres	0x500f, #0
+                                    154 ;	main.c: 48: delay();
+      00005D CDr00r00         [ 4]  155 	call	_delay
+      000060 20 DC            [ 2]  156 	jra	00102$
+                                    157 ;	main.c: 50: }
+      000062 81               [ 4]  158 	ret
+                                    159 	.area CODE
+                                    160 	.area CONST
+                                    161 	.area INITIALIZER
+                                    162 	.area CABS (ABS)

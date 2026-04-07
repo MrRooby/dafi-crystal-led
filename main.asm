@@ -93,12 +93,12 @@ __sdcc_program_startup:
 ;	-----------------------------------------
 _delay:
 	sub	sp, #2
-;	main.c: 12: for(i=0; i<50; i++){;} // crude delay
+;	main.c: 12: for(i=0; i<50000; i++){;} // crude delay
 	clrw	x
 	ldw	(0x01, sp), x
 00103$:
 	ldw	x, (0x01, sp)
-	cpw	x, #0x0032
+	cpw	x, #0xc350
 	jrnc	00105$
 	ldw	x, (0x01, sp)
 	incw	x
@@ -137,16 +137,24 @@ _main:
 00102$:
 ;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
 	bset	0x5000, #0
-;	main.c: 39: GPIOB_ODR |= (1 << LED_B); // selecting diode
-	bset	0x5005, #0
-;	main.c: 40: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
-	bres	0x500f, #0
-;	main.c: 41: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+;	main.c: 39: GPIOD_ODR |= (1 << LED_B); // selecting diode
+	bset	0x500f, #0
+;	main.c: 40: GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+	bres	0x5005, #0
+;	main.c: 42: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
 	bres	0x5005, #1
-;	main.c: 43: GPIOB_ODR |= (1 << LED_DIODE); 
+;	main.c: 44: GPIOB_ODR |= (1 << LED_DIODE); 
 	bset	0x5005, #1
+;	main.c: 45: delay();
+	call	_delay
+;	main.c: 46: GPIOB_ODR |= (1 << LED_B); // selecting diode
+	bset	0x5005, #0
+;	main.c: 47: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+	bres	0x500f, #0
+;	main.c: 48: delay();
+	call	_delay
 	jra	00102$
-;	main.c: 45: }
+;	main.c: 50: }
 	ret
 	.area CODE
 	.area CONST

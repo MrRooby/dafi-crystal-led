@@ -51,7 +51,7 @@
                                      51 	.area GSINIT
                                      52 	.area GSFINAL
                                      53 	.area GSINIT
-      008007 CD 80 82         [ 4]   54 	call	___sdcc_external_startup
+      008007 CD 80 90         [ 4]   54 	call	___sdcc_external_startup
       00800A 4D               [ 1]   55 	tnz	a
       00800B 27 03            [ 1]   56 	jreq	__sdcc_init_data
       00800D CC 80 04         [ 2]   57 	jp	__sdcc_program_startup
@@ -93,12 +93,12 @@
                                      93 ;	-----------------------------------------
       00802D                         94 _delay:
       00802D 52 02            [ 2]   95 	sub	sp, #2
-                                     96 ;	main.c: 12: for(i=0; i<50; i++){;} // crude delay
+                                     96 ;	main.c: 12: for(i=0; i<50000; i++){;} // crude delay
       00802F 5F               [ 1]   97 	clrw	x
       008030 1F 01            [ 2]   98 	ldw	(0x01, sp), x
       008032                         99 00103$:
       008032 1E 01            [ 2]  100 	ldw	x, (0x01, sp)
-      008034 A3 00 32         [ 2]  101 	cpw	x, #0x0032
+      008034 A3 C3 50         [ 2]  101 	cpw	x, #0xc350
       008037 24 07            [ 1]  102 	jrnc	00105$
       008039 1E 01            [ 2]  103 	ldw	x, (0x01, sp)
       00803B 5C               [ 1]  104 	incw	x
@@ -137,18 +137,26 @@
       00806B                        137 00102$:
                                     138 ;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
       00806B 72 10 50 00      [ 1]  139 	bset	0x5000, #0
-                                    140 ;	main.c: 39: GPIOB_ODR |= (1 << LED_B); // selecting diode
-      00806F 72 10 50 05      [ 1]  141 	bset	0x5005, #0
-                                    142 ;	main.c: 40: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
-      008073 72 11 50 0F      [ 1]  143 	bres	0x500f, #0
-                                    144 ;	main.c: 41: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+                                    140 ;	main.c: 39: GPIOD_ODR |= (1 << LED_B); // selecting diode
+      00806F 72 10 50 0F      [ 1]  141 	bset	0x500f, #0
+                                    142 ;	main.c: 40: GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+      008073 72 11 50 05      [ 1]  143 	bres	0x5005, #0
+                                    144 ;	main.c: 42: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
       008077 72 13 50 05      [ 1]  145 	bres	0x5005, #1
-                                    146 ;	main.c: 43: GPIOB_ODR |= (1 << LED_DIODE); 
+                                    146 ;	main.c: 44: GPIOB_ODR |= (1 << LED_DIODE); 
       00807B 72 12 50 05      [ 1]  147 	bset	0x5005, #1
-      00807F 20 EA            [ 2]  148 	jra	00102$
-                                    149 ;	main.c: 45: }
-      008081 81               [ 4]  150 	ret
-                                    151 	.area CODE
-                                    152 	.area CONST
-                                    153 	.area INITIALIZER
-                                    154 	.area CABS (ABS)
+                                    148 ;	main.c: 45: delay();
+      00807F CD 80 2D         [ 4]  149 	call	_delay
+                                    150 ;	main.c: 46: GPIOB_ODR |= (1 << LED_B); // selecting diode
+      008082 72 10 50 05      [ 1]  151 	bset	0x5005, #0
+                                    152 ;	main.c: 47: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+      008086 72 11 50 0F      [ 1]  153 	bres	0x500f, #0
+                                    154 ;	main.c: 48: delay();
+      00808A CD 80 2D         [ 4]  155 	call	_delay
+      00808D 20 DC            [ 2]  156 	jra	00102$
+                                    157 ;	main.c: 50: }
+      00808F 81               [ 4]  158 	ret
+                                    159 	.area CODE
+                                    160 	.area CONST
+                                    161 	.area INITIALIZER
+                                    162 	.area CABS (ABS)

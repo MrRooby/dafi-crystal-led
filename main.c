@@ -9,7 +9,7 @@
 
 void delay(void) {
   volatile unsigned int i;
-  for(i=0; i<50; i++){;} // crude delay
+  for(i=0; i<50000; i++){;} // crude delay
 }
 
 void main() {
@@ -28,7 +28,7 @@ void main() {
   // PB1 => LED Diode
   GPIOB_DDR |= (1 << LED_DIODE);
   GPIOB_CR1 |= (1 << LED_DIODE);
- 
+
   // PA0 => LED Capacitor
   GPIOA_DDR |= (1 << LED_CAP);
   GPIOA_CR1 |= (1 << LED_CAP);
@@ -36,10 +36,15 @@ void main() {
   while(1) {
     GPIOA_ODR |= (1 << LED_CAP); // charging the cap
     // delay();
-    GPIOB_ODR |= (1 << LED_B); // selecting diode
-    GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+    GPIOD_ODR |= (1 << LED_B); // selecting diode
+    GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+
     GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
     // delay();
     GPIOB_ODR |= (1 << LED_DIODE); 
+    delay();
+    GPIOB_ODR |= (1 << LED_B); // selecting diode
+    GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+    delay();
   }
 }
