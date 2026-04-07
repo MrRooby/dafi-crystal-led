@@ -51,7 +51,7 @@
                                      51 	.area GSINIT
                                      52 	.area GSFINAL
                                      53 	.area GSINIT
-      008007 CD 80 80         [ 4]   54 	call	___sdcc_external_startup
+      008007 CD 80 82         [ 4]   54 	call	___sdcc_external_startup
       00800A 4D               [ 1]   55 	tnz	a
       00800B 27 03            [ 1]   56 	jreq	__sdcc_init_data
       00800D CC 80 04         [ 2]   57 	jp	__sdcc_program_startup
@@ -87,73 +87,68 @@
                                      87 ; code
                                      88 ;--------------------------------------------------------
                                      89 	.area CODE
-                                     90 ;	main.c: 8: void delay(void) {
+                                     90 ;	main.c: 10: void delay(void) {
                                      91 ;	-----------------------------------------
                                      92 ;	 function delay
                                      93 ;	-----------------------------------------
       00802D                         94 _delay:
       00802D 52 02            [ 2]   95 	sub	sp, #2
-                                     96 ;	main.c: 10: for(i=0; i<50000; i++){;} // crude delay
+                                     96 ;	main.c: 12: for(i=0; i<50; i++){;} // crude delay
       00802F 5F               [ 1]   97 	clrw	x
       008030 1F 01            [ 2]   98 	ldw	(0x01, sp), x
       008032                         99 00103$:
       008032 1E 01            [ 2]  100 	ldw	x, (0x01, sp)
-      008034 A3 C3 50         [ 2]  101 	cpw	x, #0xc350
+      008034 A3 00 32         [ 2]  101 	cpw	x, #0x0032
       008037 24 07            [ 1]  102 	jrnc	00105$
       008039 1E 01            [ 2]  103 	ldw	x, (0x01, sp)
       00803B 5C               [ 1]  104 	incw	x
       00803C 1F 01            [ 2]  105 	ldw	(0x01, sp), x
       00803E 20 F2            [ 2]  106 	jra	00103$
       008040                        107 00105$:
-                                    108 ;	main.c: 11: }
+                                    108 ;	main.c: 13: }
       008040 5B 02            [ 2]  109 	addw	sp, #2
       008042 81               [ 4]  110 	ret
-                                    111 ;	main.c: 13: void main() {
+                                    111 ;	main.c: 15: void main() {
                                     112 ;	-----------------------------------------
                                     113 ;	 function main
                                     114 ;	-----------------------------------------
       008043                        115 _main:
-                                    116 ;	main.c: 15: GPIOA_DDR |= (1 << LED_R);
+                                    116 ;	main.c: 17: GPIOA_DDR |= (1 << LED_R);
       008043 72 16 50 02      [ 1]  117 	bset	0x5002, #3
-                                    118 ;	main.c: 16: GPIOA_CR1 |= (1 << LED_R);
+                                    118 ;	main.c: 18: GPIOA_CR1 |= (1 << LED_R);
       008047 72 16 50 03      [ 1]  119 	bset	0x5003, #3
-                                    120 ;	main.c: 18: GPIOD_DDR |= (1 << LED_G);
+                                    120 ;	main.c: 21: GPIOD_DDR |= (1 << LED_G);
       00804B 72 10 50 11      [ 1]  121 	bset	0x5011, #0
-                                    122 ;	main.c: 19: GPIOD_CR1 |= (1 << LED_G);
+                                    122 ;	main.c: 22: GPIOD_CR1 |= (1 << LED_G);
       00804F 72 10 50 12      [ 1]  123 	bset	0x5012, #0
-                                    124 ;	main.c: 21: GPIOB_DDR |= (1 << LED_B);
+                                    124 ;	main.c: 25: GPIOB_DDR |= (1 << LED_B);
       008053 72 10 50 07      [ 1]  125 	bset	0x5007, #0
-                                    126 ;	main.c: 22: GPIOB_CR1 |= (1 << LED_B);
+                                    126 ;	main.c: 26: GPIOB_CR1 |= (1 << LED_B);
       008057 72 10 50 08      [ 1]  127 	bset	0x5008, #0
-                                    128 ;	main.c: 25: GPIOB_DDR &= ~(1 << BUTTON);
-      00805B 72 15 50 07      [ 1]  129 	bres	0x5007, #2
-                                    130 ;	main.c: 26: GPIOB_CR1 |= (1 << BUTTON);
-      00805F 72 14 50 08      [ 1]  131 	bset	0x5008, #2
-                                    132 ;	main.c: 28: while(1) {
-      008063                        133 00105$:
-                                    134 ;	main.c: 29: if(GPIOB_IDR & (1 << BUTTON)){
-      008063 C6 50 06         [ 1]  135 	ld	a, 0x5006
-      008066 97               [ 1]  136 	ld	xl, a
-                                    137 ;	main.c: 30: GPIOA_ODR |= (1 << LED_R);
-      008067 C6 50 00         [ 1]  138 	ld	a, 0x5000
-                                    139 ;	main.c: 29: if(GPIOB_IDR & (1 << BUTTON)){
-      00806A 88               [ 1]  140 	push	a
-      00806B 9F               [ 1]  141 	ld	a, xl
-      00806C A5 04            [ 1]  142 	bcp	a, #0x04
-      00806E 84               [ 1]  143 	pop	a
-      00806F 27 07            [ 1]  144 	jreq	00102$
-                                    145 ;	main.c: 30: GPIOA_ODR |= (1 << LED_R);
-      008071 AA 08            [ 1]  146 	or	a, #0x08
-      008073 C7 50 00         [ 1]  147 	ld	0x5000, a
-      008076 20 EB            [ 2]  148 	jra	00105$
-      008078                        149 00102$:
-                                    150 ;	main.c: 33: GPIOA_ODR &= ~(1 << LED_R);
-      008078 A4 F7            [ 1]  151 	and	a, #0xf7
-      00807A C7 50 00         [ 1]  152 	ld	0x5000, a
-      00807D 20 E4            [ 2]  153 	jra	00105$
-                                    154 ;	main.c: 36: }
-      00807F 81               [ 4]  155 	ret
-                                    156 	.area CODE
-                                    157 	.area CONST
-                                    158 	.area INITIALIZER
-                                    159 	.area CABS (ABS)
+                                    128 ;	main.c: 29: GPIOB_DDR |= (1 << LED_DIODE);
+      00805B 72 12 50 07      [ 1]  129 	bset	0x5007, #1
+                                    130 ;	main.c: 30: GPIOB_CR1 |= (1 << LED_DIODE);
+      00805F 72 12 50 08      [ 1]  131 	bset	0x5008, #1
+                                    132 ;	main.c: 33: GPIOA_DDR |= (1 << LED_CAP);
+      008063 72 10 50 02      [ 1]  133 	bset	0x5002, #0
+                                    134 ;	main.c: 34: GPIOA_CR1 |= (1 << LED_CAP);
+      008067 72 10 50 03      [ 1]  135 	bset	0x5003, #0
+                                    136 ;	main.c: 36: while(1) {
+      00806B                        137 00102$:
+                                    138 ;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
+      00806B 72 10 50 00      [ 1]  139 	bset	0x5000, #0
+                                    140 ;	main.c: 39: GPIOB_ODR |= (1 << LED_B); // selecting diode
+      00806F 72 10 50 05      [ 1]  141 	bset	0x5005, #0
+                                    142 ;	main.c: 40: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+      008073 72 11 50 0F      [ 1]  143 	bres	0x500f, #0
+                                    144 ;	main.c: 41: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+      008077 72 13 50 05      [ 1]  145 	bres	0x5005, #1
+                                    146 ;	main.c: 43: GPIOB_ODR |= (1 << LED_DIODE); 
+      00807B 72 12 50 05      [ 1]  147 	bset	0x5005, #1
+      00807F 20 EA            [ 2]  148 	jra	00102$
+                                    149 ;	main.c: 45: }
+      008081 81               [ 4]  150 	ret
+                                    151 	.area CODE
+                                    152 	.area CONST
+                                    153 	.area INITIALIZER
+                                    154 	.area CABS (ABS)

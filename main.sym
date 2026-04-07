@@ -37,6 +37,6 @@ Area Table
    7 GSFINAL                                    size      3   flags    0
    8 CONST                                      size      0   flags    0
    9 INITIALIZER                                size      0   flags    0
-   A CODE                                       size     53   flags    0
+   A CODE                                       size     55   flags    0
    B CABS                                       size      0   flags    8
 

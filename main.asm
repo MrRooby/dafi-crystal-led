@@ -87,71 +87,66 @@ __sdcc_program_startup:
 ; code
 ;--------------------------------------------------------
 	.area CODE
-;	main.c: 8: void delay(void) {
+;	main.c: 10: void delay(void) {
 ;	-----------------------------------------
 ;	 function delay
 ;	-----------------------------------------
 _delay:
 	sub	sp, #2
-;	main.c: 10: for(i=0; i<50000; i++){;} // crude delay
+;	main.c: 12: for(i=0; i<50; i++){;} // crude delay
 	clrw	x
 	ldw	(0x01, sp), x
 00103$:
 	ldw	x, (0x01, sp)
-	cpw	x, #0xc350
+	cpw	x, #0x0032
 	jrnc	00105$
 	ldw	x, (0x01, sp)
 	incw	x
 	ldw	(0x01, sp), x
 	jra	00103$
 00105$:
-;	main.c: 11: }
+;	main.c: 13: }
 	addw	sp, #2
 	ret
-;	main.c: 13: void main() {
+;	main.c: 15: void main() {
 ;	-----------------------------------------
 ;	 function main
 ;	-----------------------------------------
 _main:
-;	main.c: 15: GPIOA_DDR |= (1 << LED_R);
+;	main.c: 17: GPIOA_DDR |= (1 << LED_R);
 	bset	0x5002, #3
-;	main.c: 16: GPIOA_CR1 |= (1 << LED_R);
+;	main.c: 18: GPIOA_CR1 |= (1 << LED_R);
 	bset	0x5003, #3
-;	main.c: 18: GPIOD_DDR |= (1 << LED_G);
+;	main.c: 21: GPIOD_DDR |= (1 << LED_G);
 	bset	0x5011, #0
-;	main.c: 19: GPIOD_CR1 |= (1 << LED_G);
+;	main.c: 22: GPIOD_CR1 |= (1 << LED_G);
 	bset	0x5012, #0
-;	main.c: 21: GPIOB_DDR |= (1 << LED_B);
+;	main.c: 25: GPIOB_DDR |= (1 << LED_B);
 	bset	0x5007, #0
-;	main.c: 22: GPIOB_CR1 |= (1 << LED_B);
+;	main.c: 26: GPIOB_CR1 |= (1 << LED_B);
 	bset	0x5008, #0
-;	main.c: 25: GPIOB_DDR &= ~(1 << BUTTON);
-	bres	0x5007, #2
-;	main.c: 26: GPIOB_CR1 |= (1 << BUTTON);
-	bset	0x5008, #2
-;	main.c: 28: while(1) {
-00105$:
-;	main.c: 29: if(GPIOB_IDR & (1 << BUTTON)){
-	ld	a, 0x5006
-	ld	xl, a
-;	main.c: 30: GPIOA_ODR |= (1 << LED_R);
-	ld	a, 0x5000
-;	main.c: 29: if(GPIOB_IDR & (1 << BUTTON)){
-	push	a
-	ld	a, xl
-	bcp	a, #0x04
-	pop	a
-	jreq	00102$
-;	main.c: 30: GPIOA_ODR |= (1 << LED_R);
-	or	a, #0x08
-	ld	0x5000, a
-	jra	00105$
+;	main.c: 29: GPIOB_DDR |= (1 << LED_DIODE);
+	bset	0x5007, #1
+;	main.c: 30: GPIOB_CR1 |= (1 << LED_DIODE);
+	bset	0x5008, #1
+;	main.c: 33: GPIOA_DDR |= (1 << LED_CAP);
+	bset	0x5002, #0
+;	main.c: 34: GPIOA_CR1 |= (1 << LED_CAP);
+	bset	0x5003, #0
+;	main.c: 36: while(1) {
 00102$:
-;	main.c: 33: GPIOA_ODR &= ~(1 << LED_R);
-	and	a, #0xf7
-	ld	0x5000, a
-	jra	00105$
-;	main.c: 36: }
+;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
+	bset	0x5000, #0
+;	main.c: 39: GPIOB_ODR |= (1 << LED_B); // selecting diode
+	bset	0x5005, #0
+;	main.c: 40: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+	bres	0x500f, #0
+;	main.c: 41: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+	bres	0x5005, #1
+;	main.c: 43: GPIOB_ODR |= (1 << LED_DIODE); 
+	bset	0x5005, #1
+	jra	00102$
+;	main.c: 45: }
 	ret
 	.area CODE
 	.area CONST
