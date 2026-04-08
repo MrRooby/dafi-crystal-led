@@ -113,43 +113,43 @@
                                     113 ;	 function main
                                     114 ;	-----------------------------------------
       008043                        115 _main:
-                                    116 ;	main.c: 17: GPIOA_DDR |= (1 << LED_R);
+                                    116 ;	main.c: 17: PA_DDR |= (1 << LED_R);
       008043 72 16 50 02      [ 1]  117 	bset	0x5002, #3
-                                    118 ;	main.c: 18: GPIOA_CR1 |= (1 << LED_R);
+                                    118 ;	main.c: 18: PA_CR1 |= (1 << LED_R);
       008047 72 16 50 03      [ 1]  119 	bset	0x5003, #3
-                                    120 ;	main.c: 21: GPIOD_DDR |= (1 << LED_G);
+                                    120 ;	main.c: 21: PD_DDR |= (1 << LED_G);
       00804B 72 10 50 11      [ 1]  121 	bset	0x5011, #0
-                                    122 ;	main.c: 22: GPIOD_CR1 |= (1 << LED_G);
+                                    122 ;	main.c: 22: PD_CR1 |= (1 << LED_G);
       00804F 72 10 50 12      [ 1]  123 	bset	0x5012, #0
-                                    124 ;	main.c: 25: GPIOB_DDR |= (1 << LED_B);
+                                    124 ;	main.c: 25: PB_DDR |= (1 << LED_B);
       008053 72 10 50 07      [ 1]  125 	bset	0x5007, #0
-                                    126 ;	main.c: 26: GPIOB_CR1 |= (1 << LED_B);
+                                    126 ;	main.c: 26: PB_CR1 |= (1 << LED_B);
       008057 72 10 50 08      [ 1]  127 	bset	0x5008, #0
-                                    128 ;	main.c: 29: GPIOB_DDR |= (1 << LED_DIODE);
+                                    128 ;	main.c: 29: PB_DDR |= (1 << LED_DIODE);
       00805B 72 12 50 07      [ 1]  129 	bset	0x5007, #1
-                                    130 ;	main.c: 30: GPIOB_CR1 |= (1 << LED_DIODE);
+                                    130 ;	main.c: 30: PB_CR1 |= (1 << LED_DIODE);
       00805F 72 12 50 08      [ 1]  131 	bset	0x5008, #1
-                                    132 ;	main.c: 33: GPIOA_DDR |= (1 << LED_CAP);
+                                    132 ;	main.c: 33: PA_DDR |= (1 << LED_CAP);
       008063 72 10 50 02      [ 1]  133 	bset	0x5002, #0
-                                    134 ;	main.c: 34: GPIOA_CR1 |= (1 << LED_CAP);
+                                    134 ;	main.c: 34: PA_CR1 |= (1 << LED_CAP);
       008067 72 10 50 03      [ 1]  135 	bset	0x5003, #0
                                     136 ;	main.c: 36: while(1) {
       00806B                        137 00102$:
-                                    138 ;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
+                                    138 ;	main.c: 37: PA_ODR |= (1 << LED_CAP); // charging the cap
       00806B 72 10 50 00      [ 1]  139 	bset	0x5000, #0
-                                    140 ;	main.c: 39: GPIOD_ODR |= (1 << LED_B); // selecting diode
+                                    140 ;	main.c: 39: PD_ODR |= (1 << LED_B); // selecting diode
       00806F 72 10 50 0F      [ 1]  141 	bset	0x500f, #0
-                                    142 ;	main.c: 40: GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+                                    142 ;	main.c: 40: PB_ODR &= ~(1 << LED_G); // selecting diode
       008073 72 11 50 05      [ 1]  143 	bres	0x5005, #0
-                                    144 ;	main.c: 42: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+                                    144 ;	main.c: 42: PB_ODR &= ~(1 << LED_DIODE); // discharging through diode
       008077 72 13 50 05      [ 1]  145 	bres	0x5005, #1
-                                    146 ;	main.c: 44: GPIOB_ODR |= (1 << LED_DIODE); 
+                                    146 ;	main.c: 44: PB_ODR |= (1 << LED_DIODE); 
       00807B 72 12 50 05      [ 1]  147 	bset	0x5005, #1
                                     148 ;	main.c: 45: delay();
       00807F CD 80 2D         [ 4]  149 	call	_delay
-                                    150 ;	main.c: 46: GPIOB_ODR |= (1 << LED_B); // selecting diode
+                                    150 ;	main.c: 46: PB_ODR |= (1 << LED_B); // selecting diode
       008082 72 10 50 05      [ 1]  151 	bset	0x5005, #0
-                                    152 ;	main.c: 47: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+                                    152 ;	main.c: 47: PD_ODR &= ~(1 << LED_G); // selecting diode
       008086 72 11 50 0F      [ 1]  153 	bres	0x500f, #0
                                     154 ;	main.c: 48: delay();
       00808A CD 80 2D         [ 4]  155 	call	_delay

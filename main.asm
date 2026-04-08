@@ -113,43 +113,43 @@ _delay:
 ;	 function main
 ;	-----------------------------------------
 _main:
-;	main.c: 17: GPIOA_DDR |= (1 << LED_R);
+;	main.c: 17: PA_DDR |= (1 << LED_R);
 	bset	0x5002, #3
-;	main.c: 18: GPIOA_CR1 |= (1 << LED_R);
+;	main.c: 18: PA_CR1 |= (1 << LED_R);
 	bset	0x5003, #3
-;	main.c: 21: GPIOD_DDR |= (1 << LED_G);
+;	main.c: 21: PD_DDR |= (1 << LED_G);
 	bset	0x5011, #0
-;	main.c: 22: GPIOD_CR1 |= (1 << LED_G);
+;	main.c: 22: PD_CR1 |= (1 << LED_G);
 	bset	0x5012, #0
-;	main.c: 25: GPIOB_DDR |= (1 << LED_B);
+;	main.c: 25: PB_DDR |= (1 << LED_B);
 	bset	0x5007, #0
-;	main.c: 26: GPIOB_CR1 |= (1 << LED_B);
+;	main.c: 26: PB_CR1 |= (1 << LED_B);
 	bset	0x5008, #0
-;	main.c: 29: GPIOB_DDR |= (1 << LED_DIODE);
+;	main.c: 29: PB_DDR |= (1 << LED_DIODE);
 	bset	0x5007, #1
-;	main.c: 30: GPIOB_CR1 |= (1 << LED_DIODE);
+;	main.c: 30: PB_CR1 |= (1 << LED_DIODE);
 	bset	0x5008, #1
-;	main.c: 33: GPIOA_DDR |= (1 << LED_CAP);
+;	main.c: 33: PA_DDR |= (1 << LED_CAP);
 	bset	0x5002, #0
-;	main.c: 34: GPIOA_CR1 |= (1 << LED_CAP);
+;	main.c: 34: PA_CR1 |= (1 << LED_CAP);
 	bset	0x5003, #0
 ;	main.c: 36: while(1) {
 00102$:
-;	main.c: 37: GPIOA_ODR |= (1 << LED_CAP); // charging the cap
+;	main.c: 37: PA_ODR |= (1 << LED_CAP); // charging the cap
 	bset	0x5000, #0
-;	main.c: 39: GPIOD_ODR |= (1 << LED_B); // selecting diode
+;	main.c: 39: PD_ODR |= (1 << LED_B); // selecting diode
 	bset	0x500f, #0
-;	main.c: 40: GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+;	main.c: 40: PB_ODR &= ~(1 << LED_G); // selecting diode
 	bres	0x5005, #0
-;	main.c: 42: GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+;	main.c: 42: PB_ODR &= ~(1 << LED_DIODE); // discharging through diode
 	bres	0x5005, #1
-;	main.c: 44: GPIOB_ODR |= (1 << LED_DIODE); 
+;	main.c: 44: PB_ODR |= (1 << LED_DIODE); 
 	bset	0x5005, #1
 ;	main.c: 45: delay();
 	call	_delay
-;	main.c: 46: GPIOB_ODR |= (1 << LED_B); // selecting diode
+;	main.c: 46: PB_ODR |= (1 << LED_B); // selecting diode
 	bset	0x5005, #0
-;	main.c: 47: GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+;	main.c: 47: PD_ODR &= ~(1 << LED_G); // selecting diode
 	bres	0x500f, #0
 ;	main.c: 48: delay();
 	call	_delay

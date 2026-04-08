@@ -14,37 +14,38 @@ void delay(void) {
 
 void main() {
   // PA3 => LED Red
-  GPIOA_DDR |= (1 << LED_R);
-  GPIOA_CR1 |= (1 << LED_R);
+  PA_DDR |= (1 << LED_R);
+  PA_CR1 |= (1 << LED_R);
 
   // PD0 => LED Green
-  GPIOD_DDR |= (1 << LED_G);
-  GPIOD_CR1 |= (1 << LED_G);
+  PD_DDR |= (1 << LED_G);
+  PD_CR1 |= (1 << LED_G);
 
   // PB0 => LED Blue
-  GPIOB_DDR |= (1 << LED_B);
-  GPIOB_CR1 |= (1 << LED_B);
+  PB_DDR |= (1 << LED_B);
+  PB_CR1 |= (1 << LED_B);
 
   // PB1 => LED Diode
-  GPIOB_DDR |= (1 << LED_DIODE);
-  GPIOB_CR1 |= (1 << LED_DIODE);
+  PB_DDR |= (1 << LED_DIODE);
+  PB_CR1 |= (1 << LED_DIODE);
 
   // PA0 => LED Capacitor
-  GPIOA_DDR |= (1 << LED_CAP);
-  GPIOA_CR1 |= (1 << LED_CAP);
+  PA_DDR |= (1 << LED_CAP);
+  PA_CR1 |= (1 << LED_CAP);
 
   while(1) {
-    GPIOA_ODR |= (1 << LED_CAP); // charging the cap
+    PA_ODR |= (1 << LED_CAP); // charging the cap
     // delay();
-    GPIOD_ODR |= (1 << LED_B); // selecting diode
-    GPIOB_ODR &= ~(1 << LED_G); // selecting diode
+    PD_ODR |= (1 << LED_B); // selecting diode
+    PB_ODR &= ~(1 << LED_G); // selecting diode
 
-    GPIOB_ODR &= ~(1 << LED_DIODE); // discharging through diode
+    PB_ODR &= ~(1 << LED_DIODE); // discharging through diode
     // delay();
-    GPIOB_ODR |= (1 << LED_DIODE); 
+    PB_ODR |= (1 << LED_DIODE); 
     delay();
-    GPIOB_ODR |= (1 << LED_B); // selecting diode
-    GPIOD_ODR &= ~(1 << LED_G); // selecting diode
+    PB_ODR |= (1 << LED_B); // selecting diode
+    PD_ODR &= ~(1 << LED_G); // selecting diode
     delay();
   }
 }
+
