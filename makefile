@@ -16,8 +16,8 @@ CFLAGS  = -m$(MCU) -DSDCC -D$(DEVICE) -I. -I$(INC_DIR)
 # Add only the peripheral files you actually use here to save time/space
 SOURCES = main.c \
           $(SRC_DIR)/stm8l15x_clk.c \
-          $(SRC_DIR)/stm8l15x_gpio.c \
-          $(SRC_DIR)/stm8l15x_usart.c
+          $(SRC_DIR)/stm8l15x_adc.c \
+          $(SRC_DIR)/stm8l15x_gpio.c
 
 # Generate list of object files (.rel) in the current directory
 OBJECTS = $(notdir $(SOURCES:.c=.rel))

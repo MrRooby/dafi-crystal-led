@@ -1,30 +1,43 @@
 #include "stm8l15x.h"
-#include "stm8l15x_usart.h"
+#include "stm8l15x_adc.h"
 #include "stm8l15x_clk.h"
+#include "stm8l15x_gpio.h"
+#include "stm8l15x_syscfg.h"
 
-int main() {
-  CLK_PeripheralClockConfig(CLK_Peripheral_USART1, ENABLE);
-  GPIO_Init(GPIOA, GPIO_Pin_2, GPIO_Mode_Out_PP_High_Fast);
+void setupADC(void){
+  CLK_PeripheralClockConfig(CLK_Peripheral_ADC1, ENABLE);
+  CLK->PCKENR2 |= 0x80; // Włącza zegar dla RI/SYSCFG (bit 7)
+  GPIO_Init(GPIOB, GPIO_Pin_3, GPIO_Mode_In_FL_No_IT);
 
-  USART_Init(USART1, 
-            (uint32_t)115200, 
-            USART_WordLength_8b, 
-            USART_StopBits_1, 
-            USART_Parity_No, 
-            USART_Mode_Tx);
+  ADC_Init(ADC1, ADC_ConversionMode_Single, ADC_Resolution_10Bit, ADC_Prescaler_1);
+  ADC_SamplingTimeConfig(ADC1, ADC_Group_SlowChannels, ADC_SamplingTime_192Cycles);
+  ADC_Cmd(ADC1, ENABLE);
+  ADC_ChannelCmd(ADC1, ADC_Channel_15, ENABLE);
+}
 
-  USART_Cmd(USART1, ENABLE);
+int readADC(void){
+  ADC_SoftwareStartConv(ADC1);
 
-  char* str = "ping\r\n";
+  while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
+
+  return (int)ADC_GetConversionValue(ADC1);
+}
+
+int main(void) {
+  GPIO_Init(GPIOA, GPIO_Pin_3, GPIO_Mode_Out_PP_Low_Fast);
+  
+  setupADC();
+
+  int sensor = 0;
 
   while(1) {
-    // GPIO_ToggleBits(GPIOA, GPIO_Pin_3);
-    while (*str) {
-      // Wait until Transmit Data Register is empty
-      while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-      USART_SendData8(USART1, *str++);
+    if(readADC()){
+      GPIO_SetBits(GPIOA, GPIO_Pin_3);
     }
-    for(volatile long i = 0; i < 50000; i++);
+    else {
+      GPIO_ResetBits(GPIOA, GPIO_Pin_3);
+    } 
+    for (volatile uint32_t i = 0; i < 50000; i++);
   }
 }
 
