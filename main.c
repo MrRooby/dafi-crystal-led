@@ -4,6 +4,7 @@
 #include "stm8l15x_gpio.h"
 #include <stdio.h>
 #include "serial.h"
+#include "stm8l15x_usart.h"
 
 #define WET_VAL 980
 #define DRY_VAL 2755
@@ -21,7 +22,9 @@ int main(void) {
   
   while(1) {
     readMoistureSensor(1);
-    for (volatile uint32_t i = 0; i < 200000; i++);
+    for (volatile uint32_t i = 0; i < 2000000; i++);
+    while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);
+    __asm__("halt");
   }
 }
 
