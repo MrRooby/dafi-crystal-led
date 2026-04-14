@@ -5,46 +5,79 @@
 #include <stdio.h>
 #include "serial.h"
 
+#define WET_VAL 980
+#define DRY_VAL 2755
+
 void setupADC(void);
-int readADC(void);
+uint16_t readSensor(void);
+uint16_t readVREF(void);
 
 int main(void) {
   GPIO_Init(GPIOA, GPIO_Pin_3, GPIO_Mode_Out_PP_High_Fast);
-  GPIO_Init(GPIOB, GPIO_Pin_0, GPIO_Mode_In_FL_No_IT);
 
   Serial_begin(115200);
+  setupADC();
+  
+  while(1) {
+    uint16_t sensor_raw = readSensor();
+    uint16_t vref_raw = readVREF();
+    // if (sensor > DRY_VAL) sensor = DRY_VAL;
+    // if (sensor < WET_VAL) sensor = WET_VAL;
 
+    uint32_t actual_vdd = (1225UL * 1024) / vref_raw;
+    uint32_t sensor_mV = ((uint32_t)sensor_raw * actual_vdd)  / 1024;
+
+    uint32_t moist_pctg = 0;
+    if (sensor_mV >= DRY_VAL) moist_pctg = 0;    
+    else if (sensor_mV <= WET_VAL) moist_pctg = 100;    
+    else moist_pctg = ((DRY_VAL - sensor_mV) * 100) / (DRY_VAL - WET_VAL);
+
+    // int32_t temp_x10 = 2300 + ((int32_t)adc - 157) * 138; 
+    // printf("Internal temp: %ld.%02ld C\r\n", temp_x10 / 100, temp_x10 % 100);
+
+    printf("\nsensor:   %d\n\r", sensor_raw);
+    printf("vref:     %d\n\r", vref_raw);
+    printf("Vdd:      %lumV\n\r", actual_vdd);
+    printf("Sensor:   %lumV\n\r", sensor_mV);
+    printf("Moisture: %lu%%\n\r", moist_pctg);
+    printf("----------------");
+
+    for (volatile uint32_t i = 0; i < 200000; i++);
+  }
+}
+
+void setupADC(void){
+  GPIO_Init(GPIOB, GPIO_Pin_0, GPIO_Mode_In_FL_No_IT);
   CLK_PeripheralClockConfig(CLK_Peripheral_ADC1, ENABLE);
   ADC_DeInit(ADC1);
 
   ADC_Init(ADC1, ADC_ConversionMode_Single, ADC_Resolution_10Bit, ADC_Prescaler_1);
+
+  ADC_VrefintCmd(ENABLE);
+  ADC_ChannelCmd(ADC1, ADC_Channel_Vrefint, ENABLE); // VREFINT
   ADC_ChannelCmd(ADC1, ADC_Channel_18, ENABLE);
+
   ADC_SamplingTimeConfig(ADC1, ADC_Group_SlowChannels, ADC_SamplingTime_384Cycles);
-  // ADC_TempSensorCmd(ENABLE);
-  // ADC_ChannelCmd(ADC1, ADC_Channel_TempSensor, ENABLE);
+  ADC_SamplingTimeConfig(ADC1, ADC_Group_FastChannels, ADC_SamplingTime_384Cycles);
+
   ADC_Cmd(ADC1, ENABLE);
+
   for (volatile uint32_t i = 0; i < 50000; i++);
+}
 
-  
-  int counter = 0;
+uint16_t readSensor(void){
+  ADC_ChannelCmd(ADC1, ADC_Channel_Vrefint, DISABLE); // VREFINT
+  ADC_ChannelCmd(ADC1, ADC_Channel_18, ENABLE);
+  ADC_SoftwareStartConv(ADC1);
 
-  while(1) {
-    ADC_SoftwareStartConv(ADC1);
+  while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
+  return ADC_GetConversionValue(ADC1);
+}
 
-    while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
-    uint16_t adc = ADC_GetConversionValue(ADC1);
-
-    if(adc > 800){
-      GPIO_SetBits(GPIOA, GPIO_Pin_3);
-    }
-    else {
-      GPIO_ResetBits(GPIOA, GPIO_Pin_3);
-    }
-    int32_t temp_x10 = 2300 + ((int32_t)adc - 157) * 138; 
-
-    // printf("Internal temp: %ld.%02ld C\r\n", temp_x10 / 100, temp_x10 % 100);
-    printf("%d\n\r", adc);
-
-    for (volatile uint32_t i = 0; i < 100000; i++);
-  }
+uint16_t readVREF(void){
+  ADC_ChannelCmd(ADC1, ADC_Channel_Vrefint, ENABLE); // VREFINT
+  ADC_ChannelCmd(ADC1, ADC_Channel_18, DISABLE);
+  ADC_SoftwareStartConv(ADC1);
+  while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
+  return ADC_GetConversionValue(ADC1);
 }
