@@ -12,12 +12,8 @@ int readADC(void);
 bool Serial_available();
 
 int main(void) {
-  CLK_DeInit(); // Reset clock registers
-  CLK_HSICmd(ENABLE); // Turn on 16MHz internal oscillator
-  while(CLK_GetFlagStatus(CLK_FLAG_HSIRDY) == RESET); // Wait for it to be ready
-  CLK_SYSCLKDivConfig(CLK_SYSCLKDiv_1);
   GPIO_Init(GPIOA, GPIO_Pin_3, GPIO_Mode_Out_PP_High_Fast);
-  Serial_begin(9600);
+  Serial_begin(115200);
   while(1) {
     GPIO_SetBits(GPIOA, GPIO_Pin_3);
     Serial_print_char('t');
@@ -43,6 +39,7 @@ void Serial_print_char(char value){
 }
 
 void Serial_begin(uint32_t baud_rate){
+  CLK_SYSCLKDivConfig(CLK_SYSCLKDiv_1);
   CLK_PeripheralClockConfig(CLK_Peripheral_USART1, ENABLE);
 
   SYSCFG->RMPCR1 |= 0x1C;
@@ -50,9 +47,16 @@ void Serial_begin(uint32_t baud_rate){
 
   (void) USART1->SR;
   (void) USART1->DR;
+  uint16_t div = (uint16_t)(16000000L / baud_rate);
 
-  USART1->BRR2 = 0x02;  /* Set USART_BRR2 to reset value 0x00 */
-  USART1->BRR1 = 0x68;  /* Set USART_BRR1 to reset value 0x00 */
+  /* 5. Split div into BRR2 and BRR1
+     Example for 0x0682:
+     BRR2: (0x0682 & 0xF000) >> 8 | (0x0682 & 0x000F) = 0x00 | 0x02 = 0x02
+     BRR1: (0x0682 & 0x0FF0) >> 4 = 0x068 */
+  USART1->BRR2 = (uint8_t)(((div & 0xF000) >> 8) | (div & 0x000F));
+  USART1->BRR1 = (uint8_t)((div & 0x0FF0) >> 4);
+  // USART1->BRR2 = 0x02; // Baud rate of 9600 
+  // USART1->BRR1 = 0x68; 
 
   USART1->CR1 = 0x00;  /* Set USART_CR1 to reset value 0x00 */
   USART1->CR2 = 0x08;  /* Set USART_CR2 to reset value 0x00 */
