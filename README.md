@@ -3,6 +3,7 @@
 | --------------- | ---------------| 
 | Microcontroller | STM8L051P3F6 | 
 | Accelerometer | LIS2DW12 | 
+| Battery | CS2032 | 
 
 
 ## Pictures
