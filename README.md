@@ -1,7 +1,6 @@
-# dafi-crystal-led
-uC => STM8L051P3F6
-Accelerometer 
-<| Column1 | Column2 | 
+# DAFI Crystal LED | Water filtration karafe reverse engineering
+| Part | Name | 
+| --------------- | ---------------| 
 | Microcontroller | STM8L051P3F6 | 
 | Accelerometer | LIS2DW12 | 
 
