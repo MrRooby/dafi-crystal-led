@@ -3,7 +3,9 @@
 #include "stm8l15x_clk.h"
 #include "stm8l15x_gpio.h"
 #include <stdio.h>
+#include <stdbool.h>
 #include "serial.h"
+
 
 #define WET_VAL 980
 #define DRY_VAL 2755
@@ -17,11 +19,13 @@
 #define DIODE_PIN GPIO_Pin_1
 #define CAP_PIN GPIO_Pin_0
 
+
 void setupADC(void);
 uint16_t readSensor(void);
 uint16_t readVREF(void);
-void readMoistureSensor(uint8_t enableSerial);
+void readMoistureSensor(bool enableSerial);
 void Delay(uint32_t tics);
+
 
 int main(void) {
   GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_High_Fast);
@@ -35,11 +39,15 @@ int main(void) {
   Serial_begin(115200);
   setupADC();
 
-  while(1) {
+  while(true) {
     readMoistureSensor(1);
     Delay(800000);
   }
 }
+
+
+
+
 
 
 void setupADC(void){
@@ -78,7 +86,7 @@ uint16_t readVREF(void){
   return ADC_GetConversionValue(ADC1);
 }
 
-void readMoistureSensor(uint8_t enableSerial){
+void readMoistureSensor(bool enableSerial){
     uint16_t sensor_raw = readSensor();
     uint16_t vref_raw = readVREF();
 
@@ -107,7 +115,7 @@ void readMoistureSensor(uint8_t enableSerial){
       GPIO_SetBits(DIODE_PORT, DIODE_PIN); // Discharging through diode
     }
 
-    if(enableSerial == 1){
+    if(enableSerial == true){
       printf("\nsensor:   %d\n\r", sensor_raw);
       printf("vref:     %d\n\r", vref_raw);
       printf("Vdd:      %lumV\n\r", actual_vdd);
