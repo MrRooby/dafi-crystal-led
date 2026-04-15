@@ -33,7 +33,7 @@ SOURCES = main.c \
 OBJECTS = $(notdir $(SOURCES:.c=.rel))
 
 # Default Rule
-all: $(TARGET)
+all: upload
 
 # Link everything
 $(TARGET): $(OBJECTS)
@@ -48,3 +48,8 @@ $(TARGET): $(OBJECTS)
 .PHONY: clean
 clean:
 	rm -f *.rel *.asm *.lst *.rst *.sym *.cdb *.map *.lk
+
+# Upload to device
+.PHONY: upload
+upload: $(TARGET)
+	stm8flash -c stlinkv2 -p stm8l051f3 -w $(TARGET)

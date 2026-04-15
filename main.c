@@ -26,6 +26,10 @@ void setupSPI();
 uint8_t LIS2DW12_ReadReg(uint8_t reg);
 void LIS2DW12_WriteReg(uint8_t reg, uint8_t value);
 uint8_t SPI_Transfer(uint8_t data);
+int32_t read_axis(uint8_t regH, uint8_t regL);
+int32_t z_axis();
+int32_t x_axis();
+int32_t y_axis();
 
 int main(void) {
   GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_High_Fast);
@@ -44,9 +48,12 @@ int main(void) {
     uint16_t temp_raw = ((uint16_t)tempH << 8 ) | tempL;
     temp_raw = temp_raw >> 4;
     uint16_t tempActual = 25 + (temp_raw) / 16;
-    printf("id:     %d\r\n", id);
-    printf("Temp:   %dC\r\n", tempActual);
-    Delay(100000);
+    printf("DAFI_T:%d_X:%d_Y:%d_Z:%d\n", 
+        tempActual,
+        (int)x_axis(),
+        (int)y_axis(),
+        (int)z_axis()
+    );
   }
 }
 
@@ -102,4 +109,27 @@ void LIS2DW12_WriteReg(uint8_t reg, uint8_t value){
   SPI_Transfer(value);
 
   GPIO_SetBits(CS_PORT, CS_PIN);
+}
+
+int32_t read_axis(uint8_t regH, uint8_t regL){
+    uint8_t low = LIS2DW12_ReadReg(regL);
+    uint8_t high = LIS2DW12_ReadReg(regH);
+    
+    // Combine to signed 16-bit
+    int16_t combined = (int16_t)(((uint16_t)high << 8) | low);
+    
+    // Shift right by 2 for 14-bit resolution
+    return ((int32_t)(combined >> 2) * 244) / 1000;
+}
+
+int32_t z_axis(){
+  return read_axis(0x2D, 0x2C);
+}
+
+int32_t x_axis(){
+  return read_axis(0x29, 0x28);
+}
+
+int32_t y_axis(){
+  return read_axis(0x2B, 0x2A);
 }
