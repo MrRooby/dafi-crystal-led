@@ -1,5 +1,7 @@
 # dafi-crystal-led
-uC => STM8L051P3F6
+| Microcontroller | STM8L051P3F6 | 
+| Accelerometer | LIS2DW12 | 
+
 
 ## Pictures
 ![Alt text](board/front.jpg "Front")
