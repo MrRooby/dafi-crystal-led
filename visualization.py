@@ -223,6 +223,47 @@ def update_plot(frame, axes, lines, texts):
     return lines + texts
 
 
+def setup_single_ax(ax, title, ylabel, ylim, line_color, text_color, xlabel=None):
+    """Utility function to setup static properties for a single plot axis"""
+    ax.set_title(title, fontsize=12, fontweight='bold')
+    if xlabel:
+        ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid(True, alpha=0.3)
+    ax.set_ylim(*ylim)
+    line, = ax.plot([], [], line_color, linewidth=2)
+    text = ax.text(0, 0, '', color=text_color, fontsize=10, fontweight='bold', verticalalignment='center')
+    return line, text
+
+
+def setup_plot_axes(fig):
+    """Set up the grid and all axes properties for the main figure."""
+    gs = GridSpec(4, 1, figure=fig, hspace=0.3, wspace=0.4)
+    axes = [[fig.add_subplot(gs[0, 0])],
+            [fig.add_subplot(gs[1, 0])],
+            [fig.add_subplot(gs[2, 0])],
+            [fig.add_subplot(gs[3, 0])]]
+    
+    # Setup axes static properties
+    line_x, text_x = setup_single_ax(
+        axes[0][0], 'X Axis Acceleration', 'Value', (-1024, 1024), 'b-', 'blue'
+    )
+    line_y, text_y = setup_single_ax(
+        axes[1][0], 'Y Axis Acceleration', 'Value', (-1024, 1024), 'g-', 'green'
+    )
+    line_z, text_z = setup_single_ax(
+        axes[2][0], 'Z Axis Acceleration', 'Value', (-1024, 1024), 'r-', 'red'
+    )
+    line_temp, text_temp = setup_single_ax(
+        axes[3][0], 'Temperature', '°C', (-40, 85), 'orange', 'darkorange', xlabel='Time (s)'
+    )
+
+    lines = [line_x, line_y, line_z, line_temp]
+    texts = [text_x, text_y, text_z, text_temp]
+    
+    return axes, lines, texts
+
+
 def main():
     global ser, reconnect_flag
     
@@ -244,44 +285,7 @@ def main():
         fig = plt.figure(figsize=(12, 12))
         fig.suptitle('DAFI Sensor Data - Live Graph', fontsize=14, fontweight='bold')
         
-        gs = GridSpec(4, 1, figure=fig, hspace=0.3, wspace=0.4)
-        axes = [[fig.add_subplot(gs[0, 0])],
-                [fig.add_subplot(gs[1, 0])],
-                [fig.add_subplot(gs[2, 0])],
-                [fig.add_subplot(gs[3, 0])]]
-        
-        # Setup axes static properties
-        axes[0][0].set_title('X Axis Acceleration', fontsize=12, fontweight='bold')
-        axes[0][0].set_ylabel('Value')
-        axes[0][0].grid(True, alpha=0.3)
-        axes[0][0].set_ylim(-1024, 1024)
-        line_x, = axes[0][0].plot([], [], 'b-', linewidth=2)
-        text_x = axes[0][0].text(0, 0, '', color='blue', fontsize=10, fontweight='bold', verticalalignment='center')
-
-        axes[1][0].set_title('Y Axis Acceleration', fontsize=12, fontweight='bold')
-        axes[1][0].set_ylabel('Value')
-        axes[1][0].grid(True, alpha=0.3)
-        axes[1][0].set_ylim(-1024, 1024)
-        line_y, = axes[1][0].plot([], [], 'g-', linewidth=2)
-        text_y = axes[1][0].text(0, 0, '', color='green', fontsize=10, fontweight='bold', verticalalignment='center')
-
-        axes[2][0].set_title('Z Axis Acceleration', fontsize=12, fontweight='bold')
-        axes[2][0].set_ylabel('Value')
-        axes[2][0].grid(True, alpha=0.3)
-        axes[2][0].set_ylim(-1024, 1024)
-        line_z, = axes[2][0].plot([], [], 'r-', linewidth=2)
-        text_z = axes[2][0].text(0, 0, '', color='red', fontsize=10, fontweight='bold', verticalalignment='center')
-
-        axes[3][0].set_title('Temperature', fontsize=12, fontweight='bold')
-        axes[3][0].set_xlabel('Time (s)')
-        axes[3][0].set_ylabel('°C')
-        axes[3][0].set_ylim(-40, 85)
-        axes[3][0].grid(True, alpha=0.3)
-        line_temp, = axes[3][0].plot([], [], 'orange', linewidth=2)
-        text_temp = axes[3][0].text(0, 0, '', color='darkorange', fontsize=10, fontweight='bold', verticalalignment='center')
-
-        lines = [line_x, line_y, line_z, line_temp]
-        texts = [text_x, text_y, text_z, text_temp]
+        axes, lines, texts = setup_plot_axes(fig)
         
         # Create animation
         print("[Main] Creating animation", flush=True)
