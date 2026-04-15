@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "serial.h"
-#include "spi.h"
 
+// On LED
 #define RED_PORT GPIOA
 #define RED_PIN GPIO_Pin_3
 
@@ -35,19 +35,17 @@ int main(void) {
   GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_High_Fast);
   Serial_begin(115200);
 
-  // spi_init();
   setupSPI();
+  LIS2DW12_WriteReg(0x20, 0x44); //Enable accelerometer and temperature sensor
 
   while(true) {
-    
-    LIS2DW12_WriteReg(0x20, 0x44); //Enable accelerometer and temperature sensor
-
     uint8_t id = LIS2DW12_ReadReg(0x0F);
     uint8_t tempL = LIS2DW12_ReadReg(0x0D);
     uint8_t tempH = LIS2DW12_ReadReg(0x0E);
     uint16_t temp_raw = ((uint16_t)tempH << 8 ) | tempL;
     temp_raw = temp_raw >> 4;
-    uint16_t tempActual = 25 + (temp_raw) / 16;
+    int16_t tempActual = 25 + (temp_raw) / 16;
+
     printf("DAFI_T:%d_X:%d_Y:%d_Z:%d\n", 
         tempActual,
         (int)x_axis(),

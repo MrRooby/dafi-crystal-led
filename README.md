@@ -7,3 +7,6 @@ uC => STM8L051P3F6
 
 ## SCHEMATIC
 ![Alt text](board/schematic.png "Board Schematic")
+
+## Python SPI - Accelerometer graph
+![Alt text](graphs.png "Accelerometer graph")

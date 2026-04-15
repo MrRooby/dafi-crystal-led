@@ -53,3 +53,8 @@ clean:
 .PHONY: upload
 upload: $(TARGET)
 	stm8flash -c stlinkv2 -p stm8l051f3 -w $(TARGET)
+
+# Upload to device and open plots
+.PHONY: plot
+plot: 
+	python3 visualization.py
