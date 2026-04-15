@@ -25,6 +25,7 @@ SOURCES = main.c \
           stm8l15x_clk.c \
           stm8l15x_adc.c \
           stm8l15x_gpio.c \
+          stm8l15x_spi.c \
           serial.c
 
 # Generate list of object files (.rel)
