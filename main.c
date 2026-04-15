@@ -24,6 +24,7 @@
 void Delay(uint32_t tics);
 void setupSPI();
 uint8_t LIS2DW12_ReadReg(uint8_t reg);
+void LIS2DW12_WriteReg(uint8_t reg, uint8_t value);
 uint8_t SPI_Transfer(uint8_t data);
 
 int main(void) {
@@ -34,9 +35,17 @@ int main(void) {
   setupSPI();
 
   while(true) {
-    printf("ping\n\r");
+    
+    LIS2DW12_WriteReg(0x20, 0x44); //Enable accelerometer and temperature sensor
+
     uint8_t id = LIS2DW12_ReadReg(0x0F);
-    printf("ID: %d\r\n", id);
+    uint8_t tempL = LIS2DW12_ReadReg(0x0D);
+    uint8_t tempH = LIS2DW12_ReadReg(0x0E);
+    uint16_t temp_raw = ((uint16_t)tempH << 8 ) | tempL;
+    temp_raw = temp_raw >> 4;
+    uint16_t tempActual = 25 + (temp_raw) / 16;
+    printf("id:     %d\r\n", id);
+    printf("Temp:   %dC\r\n", tempActual);
     Delay(100000);
   }
 }
@@ -84,4 +93,13 @@ uint8_t LIS2DW12_ReadReg(uint8_t reg) {
     
     GPIO_SetBits(CS_PORT, CS_PIN);       // Pull CS High
     return val;
+}
+
+void LIS2DW12_WriteReg(uint8_t reg, uint8_t value){
+  GPIO_ResetBits(CS_PORT, CS_PIN);
+
+  SPI_Transfer(reg & 0x7F);
+  SPI_Transfer(value);
+
+  GPIO_SetBits(CS_PORT, CS_PIN);
 }
