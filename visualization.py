@@ -121,33 +121,29 @@ def read_serial_data():
             if ser and ser.is_open:
                 try:
                     if ser.in_waiting:
-                        line = ser.readline().decode('utf-8', errors='ignore').strip()
-                        print(f"[Serial RX] {repr(line)}", flush=True)
-                        
-                        if line and "DAFI_T:" in line:
-                            # Parse using regex to handle negative numbers:
-                            # Format: DAFI_T:{temp}_X:{x}_Y:{y}_Z:{z}
-                            match = re.search(r'DAFI_T:(-?\d+)_X:(-?\d+)_Y:(-?\d+)_Z:(-?\d+)', line)
+                        while ser.in_waiting:
+                            line = ser.readline().decode('utf-8', errors='ignore').strip()
                             
-                            if match:
-                                try:
-                                    temp, x, y, z = map(int, match.groups())
-                                    print(f"[Parsed] T={temp}°C, X={x}, Y={y}, Z={z}", flush=True)
-                                    
-                                    with serial_lock:
-                                        data_buffer['timestamp'].append(datetime.now())
-                                        data_buffer['x_axis'].append(x)
-                                        data_buffer['y_axis'].append(y)
-                                        data_buffer['z_axis'].append(z)
-                                        data_buffer['temperature'].append(temp)
-                                        data_ready = True
-                                        print(f"[Buffer] Size: {len(data_buffer['timestamp'])}", flush=True)
-                                except Exception as e:
-                                    print(f"[Error] Parse error: {e}", flush=True)
-                            else:
-                                print(f"[Warn] No regex match: {repr(line)}", flush=True)
+                            if line and "DAFI_T:" in line:
+                                # Parse using regex to handle negative numbers:
+                                # Format: DAFI_T:{temp}_X:{x}_Y:{y}_Z:{z}
+                                match = re.search(r'DAFI_T:(-?\d+)_X:(-?\d+)_Y:(-?\d+)_Z:(-?\d+)', line)
+                                
+                                if match:
+                                    try:
+                                        temp, x, y, z = map(int, match.groups())
+                                        
+                                        with serial_lock:
+                                            data_buffer['timestamp'].append(datetime.now())
+                                            data_buffer['x_axis'].append(x)
+                                            data_buffer['y_axis'].append(y)
+                                            data_buffer['z_axis'].append(z)
+                                            data_buffer['temperature'].append(temp)
+                                            data_ready = True
+                                    except Exception as e:
+                                        print(f"[Error] Parse error: {e}", flush=True)
                         
-                        time.sleep(0.01)
+                        time.sleep(0.005)
                     else:
                         time.sleep(0.1)
                 
@@ -169,12 +165,12 @@ def read_serial_data():
             time.sleep(1)
 
 
-def update_plot(frame, axes):
+def update_plot(frame, axes, lines, texts):
     """Update plot with latest data"""
     
     with serial_lock:
         if not data_buffer['timestamp']:
-            return
+            return lines + texts
         
         timestamps = list(data_buffer['timestamp'])
         x_data = list(data_buffer['x_axis'])
@@ -182,48 +178,49 @@ def update_plot(frame, axes):
         z_data = list(data_buffer['z_axis'])
         temp_data = list(data_buffer['temperature'])
     
-    # Clear all axes
-    for row in axes:
-        for ax in row:
-            ax.clear()
-    
     # Time axis (in seconds from start)
     if len(timestamps) > 1:
         time_axis = [(t - timestamps[0]).total_seconds() for t in timestamps]
     else:
-        time_axis = [0]
+        time_axis = [0] * len(timestamps)
     
-    # X Axis plot
-    axes[0][0].plot(time_axis, x_data, 'b-', linewidth=2, marker='o', markersize=4)
-    axes[0][0].set_title('X Axis Acceleration', fontsize=12, fontweight='bold')
-    axes[0][0].set_ylabel('Value')
-    axes[0][0].grid(True, alpha=0.3)
+    if not time_axis:
+        return lines + texts
+
+    # Update data on lines
+    lines[0].set_data(time_axis, x_data)
+    lines[1].set_data(time_axis, y_data)
+    lines[2].set_data(time_axis, z_data)
+    lines[3].set_data(time_axis, temp_data)
     
-    # Y Axis plot
-    axes[1][0].plot(time_axis, y_data, 'g-', linewidth=2, marker='o', markersize=4)
-    axes[1][0].set_title('Y Axis Acceleration', fontsize=12, fontweight='bold')
-    axes[1][0].set_ylabel('Value')
-    axes[1][0].grid(True, alpha=0.3)
+    # Adjust X limits for all axes to slide with the data
+    min_t = time_axis[0]
+    max_t = time_axis[-1] if time_axis[-1] > time_axis[0] else time_axis[0] + 1
     
-    # Z Axis plot
-    axes[2][0].plot(time_axis, z_data, 'r-', linewidth=2, marker='o', markersize=4)
-    axes[2][0].set_title('Z Axis Acceleration', fontsize=12, fontweight='bold')
-    axes[2][0].set_ylabel('Value')
-    axes[2][0].grid(True, alpha=0.3)
+    # Create padding for the text
+    padding = (max_t - min_t) * 0.02
     
-    # Temperature plot
-    axes[3][0].plot(time_axis, temp_data, 'orange', linewidth=2, marker='o', markersize=4)
-    axes[3][0].set_title('Temperature', fontsize=12, fontweight='bold')
-    axes[3][0].set_xlabel('Time (s)')
-    axes[3][0].set_ylabel('°C')
-    axes[3][0].set_ylim(-40, 85)  # Fixed range -40 to 85°C
-    axes[3][0].grid(True, alpha=0.3)
+    axes[0][0].set_xlim(min_t, max_t + padding)
+    axes[1][0].set_xlim(min_t, max_t + padding)
+    axes[2][0].set_xlim(min_t, max_t + padding)
+    axes[3][0].set_xlim(min_t, max_t + padding)
     
-    # Set y-axis limits with some padding
-    # XYZ graphs: fixed range ±1024
-    axes[0][0].set_ylim(-1024, 1024)
-    axes[1][0].set_ylim(-1024, 1024)
-    axes[2][0].set_ylim(-1024, 1024)
+    # Update position and content of trailing text labels
+    latest_t = time_axis[-1]
+    
+    texts[0].set_position((latest_t, x_data[-1]))
+    texts[0].set_text(f' {x_data[-1]}')
+    
+    texts[1].set_position((latest_t, y_data[-1]))
+    texts[1].set_text(f' {y_data[-1]}')
+    
+    texts[2].set_position((latest_t, z_data[-1]))
+    texts[2].set_text(f' {z_data[-1]}')
+    
+    texts[3].set_position((latest_t, temp_data[-1]))
+    texts[3].set_text(f' {temp_data[-1]}°C')
+            
+    return lines + texts
 
 
 def main():
@@ -253,13 +250,46 @@ def main():
                 [fig.add_subplot(gs[2, 0])],
                 [fig.add_subplot(gs[3, 0])]]
         
+        # Setup axes static properties
+        axes[0][0].set_title('X Axis Acceleration', fontsize=12, fontweight='bold')
+        axes[0][0].set_ylabel('Value')
+        axes[0][0].grid(True, alpha=0.3)
+        axes[0][0].set_ylim(-1024, 1024)
+        line_x, = axes[0][0].plot([], [], 'b-', linewidth=2)
+        text_x = axes[0][0].text(0, 0, '', color='blue', fontsize=10, fontweight='bold', verticalalignment='center')
+
+        axes[1][0].set_title('Y Axis Acceleration', fontsize=12, fontweight='bold')
+        axes[1][0].set_ylabel('Value')
+        axes[1][0].grid(True, alpha=0.3)
+        axes[1][0].set_ylim(-1024, 1024)
+        line_y, = axes[1][0].plot([], [], 'g-', linewidth=2)
+        text_y = axes[1][0].text(0, 0, '', color='green', fontsize=10, fontweight='bold', verticalalignment='center')
+
+        axes[2][0].set_title('Z Axis Acceleration', fontsize=12, fontweight='bold')
+        axes[2][0].set_ylabel('Value')
+        axes[2][0].grid(True, alpha=0.3)
+        axes[2][0].set_ylim(-1024, 1024)
+        line_z, = axes[2][0].plot([], [], 'r-', linewidth=2)
+        text_z = axes[2][0].text(0, 0, '', color='red', fontsize=10, fontweight='bold', verticalalignment='center')
+
+        axes[3][0].set_title('Temperature', fontsize=12, fontweight='bold')
+        axes[3][0].set_xlabel('Time (s)')
+        axes[3][0].set_ylabel('°C')
+        axes[3][0].set_ylim(-40, 85)
+        axes[3][0].grid(True, alpha=0.3)
+        line_temp, = axes[3][0].plot([], [], 'orange', linewidth=2)
+        text_temp = axes[3][0].text(0, 0, '', color='darkorange', fontsize=10, fontweight='bold', verticalalignment='center')
+
+        lines = [line_x, line_y, line_z, line_temp]
+        texts = [text_x, text_y, text_z, text_temp]
+        
         # Create animation
         print("[Main] Creating animation", flush=True)
         ani = animation.FuncAnimation(
             fig, 
             update_plot, 
-            fargs=(axes,),
-            interval=200,  # Update every 200ms
+            fargs=(axes, lines, texts),
+            interval=50,  # Update every 50ms for smoother view
             blit=False,
             cache_frame_data=False
         )
