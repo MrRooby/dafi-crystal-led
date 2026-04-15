@@ -1,4 +1,7 @@
 # dafi-crystal-led
+uC => STM8L051P3F6
+Accelerometer 
+<| Column1 | Column2 | 
 | Microcontroller | STM8L051P3F6 | 
 | Accelerometer | LIS2DW12 | 
 
