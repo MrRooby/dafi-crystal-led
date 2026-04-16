@@ -1,5 +1,5 @@
 # Project Settings
-TARGET = serial.ihx
+TARGET = main.ihx
 MCU    = stm8
 DEVICE = STM8L15X_LD
 
@@ -26,6 +26,9 @@ SOURCES = main.c \
           stm8l15x_adc.c \
           stm8l15x_gpio.c \
           stm8l15x_spi.c \
+          stm8l15x_wfe.c \
+          stm8l15x_rtc.c \
+          stm8l15x_usart.c \
           serial.c
 
 # Generate list of object files (.rel)

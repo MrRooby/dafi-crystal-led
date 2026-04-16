@@ -149,12 +149,25 @@
    /*!< Used with memory Models for code higher than 64K */
   #define MEMCPY fmemcpy
  #endif /* STM8L15X_MD or STM8L15X_MDP or STM8L05X_MD_VL or STM8AL31_L_MD*/ 
-#elif defined (_SDCC_)                  /* <--- ADD THIS BLOCK */
- #define FAR  __far
- #define NEAR __near
- #define TINY __tiny
- #define EEPROM __eeprom
- #define CONST  const
+#elif defined (_SDCC_)
+  #define FAR  __far
+  #define NEAR __near
+  #define TINY __tiny
+  #define EEPROM __eeprom
+  #define CONST  const
+
+  /* --- ADD THESE FOR SDCC COMPATIBILITY --- */
+  #define enableInterrupts()    __asm__("rim")
+  #define disableInterrupts()   __asm__("sim")
+  #define rim()                 __asm__("rim")
+  #define sim()                 __asm__("sim")
+  #define halt()                __asm__("halt")
+  #define nop()                 __asm__("nop")
+  #define trap()                __asm__("trap")
+  #define wfi()                 __asm__("wfi")
+  
+  /* Macro for defining Interrupt Handlers in SDCC syntax */
+  #define INTERRUPT_HANDLER(a,b) void a(void) __interrupt(b)
 #else /*_IAR_*/
  #define FAR  __far
  #define NEAR __near
@@ -2929,15 +2942,18 @@ AES_TypeDef;
  #define halt() {_asm("halt\n");} /*!<Halt */
 #else /*_IAR*/
  // #include <intrinsics.h>
- #define enableInterrupts()    __enable_interrupt()   /* enable interrupts */
- #define disableInterrupts()   __disable_interrupt()  /* disable interrupts */
+ // #define enableInterrupts()    __enable_interrupt()   /* enable interrupts */
+ // #define disableInterrupts()   __disable_interrupt()  /* disable interrupts */
  #define rim()                 __enable_interrupt()   /* enable interrupts */
  #define sim()                 __disable_interrupt()  /* disable interrupts */
  #define nop()                 __no_operation()       /* No Operation */
  #define trap()                __trap()               /* Trap (soft IT) */
  #define wfi()                 __wait_for_interrupt() /* Wait For Interrupt */
  #define wfe()                 __wait_for_event();    /* Wait for event */
- #define halt()                __halt()               /* Halt */
+ // #define halt()                __halt()               /* Halt */
+ #define enableInterrupts()    {__asm__("rim\n");}  /* For SDCC */
+ #define disableInterrupts()   {__asm__("sim\n");}  /* For SDCC */
+ #define halt()                {__asm__("halt\n");} /* For SDCC */
 #endif /* _RAISONANCE_ */
 
 /*============================== Interrupt vector Handling ========================*/
