@@ -29,6 +29,7 @@ SOURCES = main.c \
           stm8l15x_wfe.c \
           stm8l15x_rtc.c \
           stm8l15x_usart.c \
+          stm8l15x_pwr.c \
           serial.c
 
 # Generate list of object files (.rel)
