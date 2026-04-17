@@ -26,8 +26,8 @@ SOURCES = main.c \
           stm8l15x_gpio.c \
           stm8l15x_rtc.c \
           stm8l15x_pwr.c \
+          stm8l15x_adc.c \
           serial.c
-          # stm8l15x_adc.c \
           # stm8l15x_usart.c \
           # stm8l15x_spi.c \
           # stm8l15x_wfe.c \
