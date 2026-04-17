@@ -48,6 +48,7 @@ int main(void) {
   GPIO_SetBits(CAP_PORT, CAP_PIN);
   GPIO_SetBits(BLUE_PORT, BLUE_PIN);
   Serial_begin(115200);
+  printf("woke up");
 
   initRTC();
   setupWakeup();
