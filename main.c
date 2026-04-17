@@ -3,7 +3,6 @@
 #include "stm8l15x_gpio.h"
 #include "stm8l15x_rtc.h"
 #include "stm8l15x_pwr.h"
-#include "stm8l15x_usart.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include "serial.h"
@@ -11,7 +10,7 @@
 #define RED_PORT GPIOA
 #define RED_PIN GPIO_Pin_3
 
-#define SLEEP_SECONDS 300 // 5 min wakeup routine
+#define SLEEP_SECONDS 1 - 1 // 5 min wakeup routine
 
 void Delay(uint32_t tics);
 void initRTC();
@@ -22,6 +21,7 @@ void wakeyWakey();
 RTC_InitTypeDef RTC_ConfigStruct;
 RTC_TimeTypeDef RTC_TimeInit;
 RTC_TimeTypeDef RTC_TimeRead;
+bool bit = 1;
 
 int main(void) {
   GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_Low_Slow);
@@ -32,8 +32,10 @@ int main(void) {
   enableInterrupts();
 
   while(true) {
-    wakeyWakey();
-    GPIO_SetBits(RED_PORT, RED_PIN);
+    wakeyWakey(); 
+
+    if(RTC_TimeRead.RTC_Seconds % 3 == 0) GPIO_SetBits(RED_PORT, RED_PIN);
+    else GPIO_ResetBits(RED_PORT, RED_PIN);
 
     RTC_GetTime(RTC_Format_BIN, &RTC_TimeRead);
     printf("Time %02d:%02d:%02d\n", 
@@ -41,7 +43,6 @@ int main(void) {
         RTC_TimeRead.RTC_Minutes,
         RTC_TimeRead.RTC_Seconds
     );
-    while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET); // Wait for Serial to finish
     
     timeForBed();
     halt(); 
@@ -90,7 +91,7 @@ void RTC_CSSLSE_IRQHandler(void) __interrupt(4) {
 }
 
 void timeForBed(){
-    GPIO_ResetBits(RED_PORT, RED_PIN);
+    // GPIO_ResetBits(RED_PORT, RED_PIN);
 
     PWR_UltraLowPowerCmd(ENABLE);
     FLASH->CR1 |= (uint8_t)FLASH_CR1_EEPM; // Flash power down during sleep

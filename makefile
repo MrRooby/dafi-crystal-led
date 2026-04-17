@@ -23,14 +23,14 @@ VPATH = $(SRC_DIR):$(CUSTOM_LIB)
 # Note: We don't need the full path here because of VPATH
 SOURCES = main.c \
           stm8l15x_clk.c \
-          stm8l15x_adc.c \
           stm8l15x_gpio.c \
-          stm8l15x_spi.c \
-          stm8l15x_wfe.c \
           stm8l15x_rtc.c \
-          stm8l15x_usart.c \
           stm8l15x_pwr.c \
           serial.c
+          # stm8l15x_adc.c \
+          # stm8l15x_usart.c \
+          # stm8l15x_spi.c \
+          # stm8l15x_wfe.c \
 
 # Generate list of object files (.rel)
 # This strips the directory and changes .c to .rel
