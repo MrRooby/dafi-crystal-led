@@ -1,3 +1,5 @@
+// #define DEBUG
+
 #include "stm8l15x.h"
 #include "stm8l15x_adc.h"
 #include "stm8l15x_clk.h"
@@ -6,34 +8,39 @@
 #include "stm8l15x_pwr.h"
 #include <stdio.h>
 #include <stdbool.h>
-#include "serial.h"
+#ifdef DEBUG
+  #include "serial.h"
+#endif /* ifdef DEBUG */
 
 #define RED_PORT GPIOA
 #define RED_PIN GPIO_Pin_3
 
 #define SLEEP_SECONDS 1800 - 1 // 5 min wakeup routine
                             
-#define WET_VAL 980
-#define DRY_VAL 2755
+#define WET_VAL 1000
+#define DRY_VAL 2750
+#define MOISTURE 10
 
 #define RED_PORT GPIOA
 #define BLUE_PORT GPIOD
 #define DIODE_PORT GPIOB
 #define CAP_PORT GPIOA
+#define SENSOR_PORT GPIOB
 #define RED_PIN GPIO_Pin_3
 #define BLUE_PIN  GPIO_Pin_0
 #define DIODE_PIN GPIO_Pin_1
 #define CAP_PIN GPIO_Pin_0
+#define SENSOR_PIN GPIO_Pin_2
 
-void Delay(uint32_t tics);
-void initRTC();
-void setupWakeup();
-void timeForBed();
-void wakeyWakey();
+inline void Delay(const uint32_t millis);
+void initRTC(void);
+void setupWakeup(void);
+void timeForBed(void);
+void wakeyWakey(void);
 void setupADC(void);
 uint16_t readSensor(void);
 uint16_t readVREF(void);
-void readMoistureSensor(bool enableSerial);
+void readMoistureSensor(void);
 
 RTC_InitTypeDef RTC_ConfigStruct;
 RTC_TimeTypeDef RTC_TimeInit;
@@ -41,15 +48,23 @@ RTC_TimeTypeDef RTC_TimeRead;
 bool bit = 1;
 
 int main(void) {
-  GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_High_Fast);
-  GPIO_Init(DIODE_PORT, DIODE_PIN, GPIO_Mode_Out_PP_High_Fast);
-  GPIO_Init(CAP_PORT, CAP_PIN, GPIO_Mode_Out_PP_High_Fast);
-  GPIO_Init(BLUE_PORT, BLUE_PIN, GPIO_Mode_Out_PP_High_Fast);
+  CLK_SYSCLKDivConfig(CLK_SYSCLKDiv_1);
+  GPIO_Init(GPIOA, GPIO_Pin_All, GPIO_Mode_Out_PP_Low_Slow);
+  GPIO_Init(GPIOB, GPIO_Pin_All, GPIO_Mode_Out_PP_Low_Slow);
+  GPIO_Init(GPIOC, GPIO_Pin_All, GPIO_Mode_Out_PP_Low_Slow);
+  GPIO_Init(GPIOD, GPIO_Pin_All, GPIO_Mode_Out_PP_Low_Slow);
+
+  GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_Low_Fast);
+  GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_Low_Fast);
+  GPIO_Init(SENSOR_PORT, SENSOR_PIN, GPIO_Mode_Out_PP_Low_Fast);
+  GPIO_Init(GPIOB, GPIO_Pin_0, GPIO_Mode_In_FL_No_IT);
+
   GPIO_ResetBits(RED_PORT, RED_PIN);
-  GPIO_SetBits(DIODE_PORT, DIODE_PIN);
-  GPIO_SetBits(CAP_PORT, CAP_PIN);
-  GPIO_SetBits(BLUE_PORT, BLUE_PIN);
-  Serial_begin(115200);
+  GPIO_ResetBits(SENSOR_PORT, SENSOR_PIN);
+
+  #ifdef DEBUG
+    Serial_begin(115200);
+  #endif /* ifdef DEBUG */
 
   initRTC();
   setupWakeup();
@@ -58,27 +73,29 @@ int main(void) {
 
   while(true) {
     wakeyWakey(); 
-
       
-    readMoistureSensor(1);
-    // RTC_GetTime(RTC_Format_BIN, &RTC_TimeRead);
-    // printf("Time %02d:%02d:%02d\n", 
-    //     RTC_TimeRead.RTC_Hours,
-    //     RTC_TimeRead.RTC_Minutes,
-    //     RTC_TimeRead.RTC_Seconds
-    // );
+#ifdef DEBUG
+    RTC_GetTime(RTC_Format_BIN, &RTC_TimeRead);
+    printf("\n|===%02d:%02d:%02d===|", 
+        RTC_TimeRead.RTC_Hours,
+        RTC_TimeRead.RTC_Minutes,
+        RTC_TimeRead.RTC_Seconds
+        );
+#endif /* ifdef DEBUG */
+
+    readMoistureSensor();
     
     timeForBed();
     halt(); 
   }
 }
 
-void Delay(uint32_t tics){
-    for (volatile uint32_t i = 0; i < tics; i++);
+inline void Delay(const uint32_t millis){
+    for (volatile uint32_t i = 0; i < millis * 800; i++);
 }
 
 
-void initRTC(){
+void initRTC(void){
   CLK_LSICmd(ENABLE);
   while(CLK_GetFlagStatus(CLK_FLAG_LSIRDY) == RESET);
   CLK_RTCClockConfig(CLK_RTCCLKSource_LSI, CLK_RTCCLKDiv_1);
@@ -98,39 +115,42 @@ void initRTC(){
   }
 }
 
-void setupWakeup(){
+void setupWakeup(void){
   // 38kHz LSI clock / 16 = 2317
   RTC_WakeUpClockConfig(RTC_WakeUpClock_CK_SPRE_16bits);
-  // Every 10s
+
   RTC_SetWakeUpCounter(SLEEP_SECONDS);
   RTC_ITConfig(RTC_IT_WUT, ENABLE);
   RTC_WakeUpCmd(ENABLE);
 }
 
-void timeForBed(){
-    // GPIO_ResetBits(RED_PORT, RED_PIN);
+void timeForBed(void){
+    GPIO_ResetBits(SENSOR_PORT, SENSOR_PIN);
+
     ADC_VrefintCmd(DISABLE);
     ADC_Cmd(ADC1, DISABLE);
 
+    CLK_PeripheralClockConfig(CLK_Peripheral_ADC1, DISABLE);
+
     PWR_UltraLowPowerCmd(ENABLE);
     FLASH->CR1 |= (uint8_t)FLASH_CR1_EEPM; // Flash power down during sleep
-    // CLK_MainRegulatorCmd(DISABLE);
     RTC_ClearFlag(RTC_FLAG_WUTF);
 }
 
-void wakeyWakey(){
+void wakeyWakey(void){
     FLASH->CR1 &= (uint8_t)(~FLASH_CR1_EEPM); // Flash power up after sleep
     PWR_UltraLowPowerCmd(DISABLE); // Enable Ultra Low Power mode
     CLK_HSICmd(ENABLE); // Re-enable high speed clock after waking up 
     while(CLK_GetFlagStatus(CLK_FLAG_HSIRDY) == RESET);
     RTC_WaitForSynchro(); // Necessary for synchronization and proper readings
 
+    CLK_PeripheralClockConfig(CLK_Peripheral_ADC1, ENABLE);
     ADC_VrefintCmd(ENABLE);
     ADC_Cmd(ADC1, ENABLE);
+    GPIO_SetBits(SENSOR_PORT, SENSOR_PIN);
 }
 
 void setupADC(void){
-  GPIO_Init(GPIOB, GPIO_Pin_0, GPIO_Mode_In_FL_No_IT);
   CLK_PeripheralClockConfig(CLK_Peripheral_ADC1, ENABLE);
   ADC_DeInit(ADC1);
 
@@ -145,7 +165,7 @@ void setupADC(void){
 
   ADC_Cmd(ADC1, ENABLE);
 
-  Delay(50000);
+  // Delay(50000);
 }
 
 uint16_t readSensor(void){
@@ -165,47 +185,42 @@ uint16_t readVREF(void){
   return ADC_GetConversionValue(ADC1);
 }
 
-void readMoistureSensor(bool enableSerial){
-    uint16_t sensor_raw = readSensor();
-    uint16_t vref_raw = readVREF();
+void readMoistureSensor(void){
+  Delay(1000); // Let sensor stabilize
 
-    uint32_t actual_vdd = (1225UL * 1024) / vref_raw;
-    // Low battery warning
-    // if(actual_vdd < 2900) GPIO_ResetBits(RED_PORT, RED_PIN);
-    // else GPIO_SetBits(RED_PORT, RED_PIN);
-    
-    uint32_t sensor_mV = ((uint32_t)sensor_raw * actual_vdd)  / 1024;
+  long sensor_avg = 0;
+  for (int i = 0; i < 16; i++) {
+    sensor_avg += readSensor(); 
+  } // Take 100 readings and average them
+  sensor_avg /= 16;
 
-    uint32_t moist_pctg = 0;
-    if (sensor_mV >= DRY_VAL) moist_pctg = 0;    
-    else if (sensor_mV <= WET_VAL) moist_pctg = 100;    
-    else moist_pctg = ((DRY_VAL - sensor_mV) * 100) / (DRY_VAL - WET_VAL);
+  const uint16_t vref_raw = readVREF();
+  const uint32_t actual_vdd = (1225UL * 1024) / vref_raw;
+  const uint32_t sensor_mV = (sensor_avg * actual_vdd)  / 1024;
 
+  uint32_t sensor_mV_adj = sensor_mV;
+  if (sensor_mV > DRY_VAL) sensor_mV_adj = DRY_VAL;
+  else if (sensor_mV < WET_VAL) sensor_mV_adj = WET_VAL;
+  
+  const uint32_t range = ((uint32_t)DRY_VAL - (uint32_t)WET_VAL);
+  uint32_t moist_pctg = ((DRY_VAL - sensor_mV_adj) * 100) / range;
 
-    if(moist_pctg > 10){
-      GPIO_SetBits(RED_PORT, RED_PIN); // Charging capacitor
-      
-      // GPIO_SetBits(CAP_PORT, CAP_PIN); // Charging capacitor
-      // GPIO_ResetBits(BLUE_PORT, BLUE_PIN); // Selecting LED
-      // GPIO_ResetBits(DIODE_PORT, DIODE_PIN); // Discharging through diode
-      // GPIO_SetBits(DIODE_PORT, DIODE_PIN); // Discharging through diode
-    } 
-    else{
-      GPIO_ResetBits(RED_PORT, RED_PIN); // Charging capacitor
-                                       //
-      // GPIO_ResetBits(CAP_PORT, CAP_PIN); // Charging capacitor
-      // GPIO_SetBits(BLUE_PORT, BLUE_PIN); // Selecting LED
-      // GPIO_SetBits(DIODE_PORT, DIODE_PIN); // Discharging through diode
-    }
+  if(moist_pctg < MOISTURE){
+    GPIO_SetBits(RED_PORT, RED_PIN); 
+  } 
+  else{
+    GPIO_ResetBits(RED_PORT, RED_PIN); 
+  }
 
-    if(enableSerial == true){
-      printf("\nsensor:   %d\n\r", sensor_raw);
-      printf("VRef:     %d\n\r", vref_raw);
-      printf("Vdd:      %lumV\n\r", actual_vdd);
-      printf("Sensor:   %lumV\n\r", sensor_mV);
-      printf("Moisture: %lu%%\n\r", moist_pctg);
-      printf("----------------");
-    }
+#ifdef DEBUG
+  printf("\nsensor:   %lu\n\r", sensor_avg);
+  printf("VRef:     %d\n\r", vref_raw);
+  printf("Vdd:      %lumV\n\r", actual_vdd);
+  printf("Sensor:   %lumV\n\r", sensor_mV);
+  printf("Moisture: %lu%%\n\r", moist_pctg);
+  printf("----------------");
+#endif /* ifdef DEBUG */
+
 }
 
 // Interrupt vector for wakeup handling

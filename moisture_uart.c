@@ -28,6 +28,7 @@ void Delay(uint32_t tics);
 
 
 int main(void) {
+  CLK_SYSCLKDivConfig(CLK_SYSCLKDiv_1);
   GPIO_Init(RED_PORT, RED_PIN, GPIO_Mode_Out_PP_High_Fast);
   GPIO_Init(DIODE_PORT, DIODE_PIN, GPIO_Mode_Out_PP_High_Fast);
   GPIO_Init(CAP_PORT, CAP_PIN, GPIO_Mode_Out_PP_High_Fast);
